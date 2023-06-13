@@ -30,18 +30,19 @@ class ADS1115Usermod : public Usermod {
     }
 
     void loop() {
-      if (isEnabled && millis() - lastTime > loopInterval) {
-        lastTime = millis();
+      if (!isEnabled || strip.isUpdating() || millis() - lastTime <= loopInterval)
+        return;
 
-        // If we don't have new data, skip this iteration.
-        if (!ads.conversionComplete()) {
-          return;
-        }
+      lastTime = millis();
 
-        updateResult();
-        moveToNextChannel();
-        startReading();
+      // If we don't have new data, skip this iteration.
+      if (!ads.conversionComplete()) {
+        return;
       }
+
+      updateResult();
+      moveToNextChannel();
+      startReading();
     }
 
     void addToJsonInfo(JsonObject& root)
@@ -108,7 +109,7 @@ class ADS1115Usermod : public Usermod {
         hasEnabledChannels |= settingsPtr->isEnabled;
       }
 
-      configComplete &= getJsonValue(top[F("Loop Interval")], loopInterval);
+      configComplete &= getJsonValue(top[F("Loop Interval")], loopInterval, 1000);
 
       isEnabled = isInitialized && configComplete && hasEnabledChannels;
 
@@ -207,7 +208,7 @@ class ADS1115Usermod : public Usermod {
     };
     float readings[channelsCount] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-    unsigned long loopInterval = 1000;
+    unsigned long loopInterval;
     unsigned long lastTime = 0;
 
     Adafruit_ADS1115 ads;
