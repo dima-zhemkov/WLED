@@ -2,7 +2,6 @@
 
 #include "wled.h"
 
-// class name. Use something descriptive and leave the ": public Usermod" part :)
 class InternalTemperatureUsermod : public Usermod
 {
 
@@ -12,7 +11,6 @@ private:
   bool isEnabled;
   float temperature = 0;
 
-  // string that are used multiple time (this will save some flash memory)
   static const char _name[];
   static const char _enabled[];
   static const char _loopInterval[];
@@ -36,6 +34,8 @@ public:
     if (!isEnabled || strip.isUpdating() || millis() - lastTime <= loopInterval)
       return;
 
+    lastTime = millis();
+
 #ifdef ESP8266 // ESP8266
     // does not seem possible
     temperature = -1;
@@ -53,14 +53,8 @@ public:
       publishMqtt(array);
     }
 #endif
-
-    lastTime = millis();
   }
-  /*
-   * addToJsonInfo() can be used to add custom entries to the /json/info part of the JSON API.
-   * Creating an "u" object allows you to add custom key/value pairs to the Info section of the WLED web UI.
-   * Below it is shown how this could be used for e.g. a light sensor
-   */
+
   void addToJsonInfo(JsonObject &root)
   {
     // if "u" object does not exist yet wee need to create it
@@ -115,22 +109,16 @@ public:
   {
   }
 
-  /*
-   * getId() allows you to optionally give your V2 usermod an unique ID (please define it in const.h!).
-   * This could be used in the future for the system to determine whether your usermod is installed.
-   */
   uint16_t getId()
   {
     return USERMOD_ID_INTERNAL_TEMPERATURE;
   }
 };
 
-// add more strings here to reduce flash memory usage
 const char InternalTemperatureUsermod::_name[] PROGMEM = "Internal Temperature";
 const char InternalTemperatureUsermod::_enabled[] PROGMEM = "Enabled";
 const char InternalTemperatureUsermod::_loopInterval[] PROGMEM = "Loop Interval";
 
-// implementation of non-inline member methods
 void InternalTemperatureUsermod::publishMqtt(const char *state, bool retain)
 {
 #ifndef WLED_DISABLE_MQTT
